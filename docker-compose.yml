@@ -1,0 +1,61 @@
+version: '3.7'
+services:
+  phpmyadmin:
+    image: 'phpmyadmin/phpmyadmin:5.0'
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootp
+      - PMA_USER=bn_magento
+      - PMA_PASSWORD=magento_db_password
+    ports:
+      - "8091:80"
+    links:
+      - "mariadb:db"
+    depends_on:
+      - mariadb
+  mariadb:
+    image: 'bitnami/mariadb:10.2'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=bn_magento
+      - MARIADB_PASSWORD=magento_db_password
+      - MARIADB_DATABASE=bitnami_magento
+    volumes:
+      - 'mariadb_data:/bitnami'
+  magento:
+    image: 'bitnami/magento:2'
+    environment:
+      - MARIADB_HOST=mariadb
+      - MARIADB_PORT_NUMBER=3306
+      - MAGENTO_DATABASE_USER=bn_magento
+      - MAGENTO_DATABASE_PASSWORD=magento_db_password
+      - MAGENTO_DATABASE_NAME=bitnami_magento
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT_NUMBER=9200
+      - EXTERNAL_HTTP_PORT_NUMBER=8090
+      - EXTERNAL_HTTPS_PORT_NUMBER=4443
+      - MAGENTO_HOST=localhost
+      - MAGENTO_MODE=developer
+      - MAGENTO_USE_SECURE_ADMIN=no
+    ports:
+      - '8090:80'
+      - '4443:443'
+    volumes:
+      - 'magento_data:/bitnami/magento/htdocs'
+    depends_on:
+      - mariadb
+      - elasticsearch
+  elasticsearch:
+    image: 'bitnami/elasticsearch:6'
+    volumes:
+      - 'elasticsearch_data:/bitnami/elasticsearch/data'
+volumes:
+  elasticsearch_data:
+    driver: local
+  mariadb_data:
+    driver: local
+  magento_data:
+    driver: local
+#     driver_opts:
+#       type: none
+#       device: $PWD/magento_data
+#       o: bind
